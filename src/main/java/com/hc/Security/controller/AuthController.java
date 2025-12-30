@@ -1,5 +1,7 @@
 package com.hc.Security.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hc.Security.dto.LoginRequest;
 import com.hc.Security.dto.LoginResponse;
 import com.hc.Security.service.AuthService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
@@ -45,4 +49,10 @@ public class AuthController {
         request.setLoginType((short) 1);
         return authService.register(request);
     } 
+
+    @GetMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String response = authService.logout(request);
+        return new ResponseEntity<String>(response,  null, 200);
+    }
 }

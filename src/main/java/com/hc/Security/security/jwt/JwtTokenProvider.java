@@ -1,6 +1,5 @@
 package com.hc.Security.security.jwt;
 
-import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -8,6 +7,7 @@ import javax.crypto.SecretKey;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -40,4 +40,16 @@ public class JwtTokenProvider {
                 .getBody()
                 .getSubject();
     }
+
+    public long getExpiration(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getExpiration().getTime();
+    }
+    
+    
 }
