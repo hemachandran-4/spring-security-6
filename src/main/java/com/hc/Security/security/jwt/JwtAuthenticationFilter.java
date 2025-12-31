@@ -32,6 +32,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private final CustomUserDetailsService userDetailsService;
     private final BlackListDAO tokenBlacklistRepository;
 
+    private static final List<String> PUBLIC_ENDPOINTS = List.of(
+        "/auth/user/login",
+        "/auth/user/register"
+    );
+
     public JwtAuthenticationFilter(
             JwtTokenProvider tokenProvider,
             CustomUserDetailsService userDetailsService,
@@ -40,6 +45,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         this.userDetailsService = userDetailsService;
         this.tokenBlacklistRepository = tokenBlacklistRepository;
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+            return true;
+        }
+
+        return PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
     }
 
     @Override
