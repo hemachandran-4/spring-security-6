@@ -37,7 +37,6 @@ public class AuthController {
                 request.getPassword());
     }
 
-
     @PostMapping("/user/register")
     public String register(@RequestBody LoginRequest request) {
         request.setLoginType((short) 0);

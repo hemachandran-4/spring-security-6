@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -16,25 +17,43 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtTokenProvider {
 
-    private static final String SECRET = "J3kF3+8QeZs7J1X7V1L9z5Qx0n7o0b4xZ+F+e8kZp1E=";
+    private final long expiryMillis;
 
-    private static final long EXPIRY = 3600000;
+    private final SecretKey signingKey;
 
-    private final SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET));
+    public JwtTokenProvider(
+        /* 
+            * 1. Local Deployment - application.properties
+            * 2. Production Deployment - Environment Variables
+            * 3. AWS - AWS Secrets Manager
+            * 4. GCP - Secret Manager
+            * 5. Azure - Azure Key Vault
+            * 6. Kubernetes - Kubernetes Secrets
+            * 7. Docker - .env File
+            * 8. HashiCorp Vault
+        */
+            @Value("${jwt.secret}") String base64Secret, 
+            @Value("${jwt.expiry}") long expiryMillis) {
+
+        this.signingKey = Keys.hmacShaKeyFor(
+                Decoders.BASE64.decode(base64Secret)
+        );
+        this.expiryMillis = expiryMillis;
+    }
 
     public String generateToken(Authentication auth) {
         return Jwts.builder()
                 .setSubject(auth.getName())
                 .claim("roles", auth.getAuthorities())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRY))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + expiryMillis))
+                .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String getUsername(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
@@ -43,7 +62,7 @@ public class JwtTokenProvider {
 
     public long getExpiration(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
