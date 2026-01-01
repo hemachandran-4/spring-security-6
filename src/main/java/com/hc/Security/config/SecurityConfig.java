@@ -39,8 +39,10 @@ public class SecurityConfig {
             .exceptionHandling(ex ->
                 ex.authenticationEntryPoint(entryPoint))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/user/login").permitAll()
-                .requestMatchers("/auth/user/register").permitAll()
+                .requestMatchers("/auth/user/login",
+                        "/auth/refresh",
+                        "/auth/user/register"
+                ).permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

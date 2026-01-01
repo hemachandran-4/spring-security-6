@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.hc.Security.dto.LoginRequest;
 import com.hc.Security.dto.LoginResponse;
+import com.hc.Security.entity.RefreshToken;
 import com.hc.Security.entity.Role;
 import com.hc.Security.entity.User;
 import com.hc.Security.repository.RoleDAO;
@@ -30,19 +31,22 @@ public class AuthService {
     private final RoleDAO roleDAO;
     private final PasswordEncoder passwordEncoder;
     private final BlackListService blacklistService;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthService(AuthenticationManager authManager,
                        JwtTokenProvider tokenProvider,
                        UserDAO userDAO,
                        PasswordEncoder passwordEncoder,
                        RoleDAO roleDAO,
-                       BlackListService blacklistService) {
+                       BlackListService blacklistService,
+                       RefreshTokenService refreshTokenService) {
         this.authManager = authManager;
         this.tokenProvider = tokenProvider;
         this.userDAO = userDAO;
         this.passwordEncoder = passwordEncoder;
         this.roleDAO = roleDAO;
         this.blacklistService = blacklistService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public LoginResponse login(String username, String password) {
@@ -56,6 +60,7 @@ public class AuthService {
             System.out.println("Generated token: " + token);
             return new LoginResponse(
                     token,
+                    refreshTokenService.create(username, password).getToken(),
                     "Bearer",
                     3600,
                     auth.getName(),
@@ -112,5 +117,31 @@ public class AuthService {
 
         SecurityContextHolder.clearContext();
         return "Logout successful";
+    }
+
+    public LoginResponse refreshToken(String refreshTokenValue) {
+        logger.info("Refreshing token with refresh token: {}", refreshTokenValue);
+        RefreshToken oldToken = refreshTokenService.validate(refreshTokenValue);
+
+        // Rotate token
+        refreshTokenService.revoke(oldToken);
+        logger.info("Revoked old refresh token: {}", oldToken.getToken());
+        
+        RefreshToken newRefreshToken = refreshTokenService.create(oldToken.getUsername(), oldToken.getPassword());
+        Authentication auth = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(oldToken.getUsername(), oldToken.getPassword()));
+        String token = tokenProvider.generateToken(auth);
+        logger.info("Generated new access token for user: {}", auth.getName());
+        return new LoginResponse(
+                token,
+                newRefreshToken.getToken(),
+                "Bearer",
+                3600,
+                auth.getName(),
+                auth.getAuthorities()
+                        .stream()
+                        .map(a -> a.getAuthority())
+                        .toList());
+
     }
 }
