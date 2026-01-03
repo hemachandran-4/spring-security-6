@@ -1,6 +1,7 @@
 package com.hc.Security.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,7 +13,6 @@ import com.hc.Security.dto.LoginRequest;
 import com.hc.Security.dto.LoginResponse;
 import com.hc.Security.service.AuthService;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
@@ -51,13 +51,16 @@ public class AuthController {
     } 
 
     @GetMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
-        String response = authService.logout(request);
+    public ResponseEntity<String> logout(@RequestHeader(org.springframework.http.HttpHeaders.AUTHORIZATION) String authorizationHeader,
+        @CookieValue(name = "refresh_token", required = false) String refreshToken
+    ) {
+        String response = authService.logout(authorizationHeader, refreshToken);
         return new ResponseEntity<String>(response,  null, 200);
     }
 
-    @GetMapping("/refresh")
-    public LoginResponse refresh(@RequestHeader("Authorization") String header) {
+    @PostMapping("/refresh")
+    public LoginResponse refresh(@RequestHeader("Authorization") String header
+) {
 
         String refreshTokenValue = header.substring(7);
 

@@ -1,6 +1,7 @@
 package com.hc.Security.security.jwt;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -27,6 +28,8 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter{
     
     private static Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+  
+    private final String SECRET_SALT = "SomeSecretSaltValue";
 
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService userDetailsService;
@@ -88,7 +91,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     }
 
     private String hash(String token) {
-        return DigestUtils.md5DigestAsHex(token.getBytes());
+        return DigestUtils.md5DigestAsHex(
+                (token + SECRET_SALT).getBytes(StandardCharsets.UTF_8));
     }
     
 }

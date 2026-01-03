@@ -1,5 +1,6 @@
 package com.hc.Security.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,6 +14,8 @@ import com.hc.Security.repository.BlackListDAO;
 
 @Service
 public class BlackListService {
+
+    private final String secretSalt = "SomeSecretSaltValue";
 
     private static Logger logger = LoggerFactory.getLogger(BlackListService.class);
 
@@ -48,7 +51,8 @@ public class BlackListService {
     }
 
     private String hash(String token) {
-        return DigestUtils.md5DigestAsHex(token.getBytes());
+        return DigestUtils.md5DigestAsHex(
+                (token + secretSalt).getBytes(StandardCharsets.UTF_8));
     }
 
      

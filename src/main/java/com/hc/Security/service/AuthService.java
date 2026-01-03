@@ -6,24 +6,24 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hc.Security.dto.LoginRequest;
 import com.hc.Security.dto.LoginResponse;
-import com.hc.Security.entity.RefreshToken;
 import com.hc.Security.entity.Role;
 import com.hc.Security.entity.User;
 import com.hc.Security.repository.RoleDAO;
 import com.hc.Security.repository.UserDAO;
+import com.hc.Security.security.CustomUserDetailsService;
 import com.hc.Security.security.jwt.JwtTokenProvider;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class AuthService {
 
-    private static Logger logger = LoggerFactory.getLogger(AuthService.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
     private final AuthenticationManager authManager;
     private final JwtTokenProvider tokenProvider;
@@ -32,6 +32,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final BlackListService blacklistService;
     private final RefreshTokenService refreshTokenService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     public AuthService(AuthenticationManager authManager,
                        JwtTokenProvider tokenProvider,
@@ -39,7 +40,8 @@ public class AuthService {
                        PasswordEncoder passwordEncoder,
                        RoleDAO roleDAO,
                        BlackListService blacklistService,
-                       RefreshTokenService refreshTokenService) {
+                       RefreshTokenService refreshTokenService,
+                       CustomUserDetailsService customUserDetailsService) {
         this.authManager = authManager;
         this.tokenProvider = tokenProvider;
         this.userDAO = userDAO;
@@ -47,20 +49,18 @@ public class AuthService {
         this.roleDAO = roleDAO;
         this.blacklistService = blacklistService;
         this.refreshTokenService = refreshTokenService;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     public LoginResponse login(String username, String password) {
         try {
-
-            System.out.println("Attempting to authenticate user: " + username);
             Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));
-            System.out.println("Authentication successful for user: " + username);
             String token = tokenProvider.generateToken(auth);
-            System.out.println("Generated token: " + token);
+            String refreshToken = refreshTokenService.create(userDAO.findByUsername(username).get().getId());
             return new LoginResponse(
                     token,
-                    refreshTokenService.create(username, password).getToken(),
+                    refreshToken,
                     "Bearer",
                     3600,
                     auth.getName(),
@@ -103,45 +103,54 @@ public class AuthService {
         return "User registered successfully";
     }
 
-    public String logout(HttpServletRequest request) {
-        logger.info("Processing logout request");
-        String header = request.getHeader("Authorization");
+    public String logout(String authorizationHeader, String refreshToken) {
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            logger.info("Blacklisting token: {}", token);
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
             long expiryTime = tokenProvider.getExpiration(token);
             blacklistService.blacklist(token, expiryTime);
-            logger.info("Token blacklisted successfully");
+        }
+
+        if (refreshToken != null) {
+            refreshTokenService.revokeToken(refreshToken);
         }
 
         SecurityContextHolder.clearContext();
         return "Logout successful";
     }
 
-    public LoginResponse refreshToken(String refreshTokenValue) {
-        logger.info("Refreshing token with refresh token: {}", refreshTokenValue);
-        RefreshToken oldToken = refreshTokenService.validate(refreshTokenValue);
+    public LoginResponse refreshToken(String oldToken) {
 
-        // Rotate token
-        refreshTokenService.revoke(oldToken);
-        logger.info("Revoked old refresh token: {}", oldToken.getToken());
-        
-        RefreshToken newRefreshToken = refreshTokenService.create(oldToken.getUsername(), oldToken.getPassword());
-        Authentication auth = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(oldToken.getUsername(), oldToken.getPassword()));
+        String newRefreshToken = refreshTokenService.rotateToken(oldToken);
+
+        Long userId = refreshTokenService.getUserIfFromToken(newRefreshToken);
+
+        if(userId == null) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        User user = userDAO.findById(userId).orElseThrow(() ->
+            new RuntimeException("User not found"));
+
+        // check user status id needed
+
+        UserDetails userDetails = customUserDetailsService
+        .loadUserByUsername(user.getUsername());
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
         String token = tokenProvider.generateToken(auth);
-        logger.info("Generated new access token for user: {}", auth.getName());
+        
         return new LoginResponse(
                 token,
-                newRefreshToken.getToken(),
+                newRefreshToken,
                 "Bearer",
                 3600,
                 auth.getName(),
-                auth.getAuthorities()
-                        .stream()
-                        .map(a -> a.getAuthority())
-                        .toList());
+                auth.getAuthorities().stream().map(a -> a.getAuthority()).toList());
 
     }
 }

@@ -2,6 +2,7 @@ package com.hc.Security.entity;
 
 import java.time.Instant;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,15 +17,24 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String token;
+    @Column(nullable = false, unique = true, length = 64)
+    private String tokenHash;
 
-    private String username;
+    @Column(nullable = false)
+    private Long userId;
 
-    private String password;
+    @Column(nullable = false)
+    private Instant expiresAt;
 
-    private Instant expiry;
+    @Column(nullable = false)
+    private boolean revoked = false;
 
-    private boolean revoked;
+    @Column(nullable = false)
+    private Instant createdAt = Instant.now();
+
+    private Instant revokedAt;
+
+    private String replacedByTokenHash;
 
     public Long getId() {
         return id;
@@ -34,36 +44,28 @@ public class RefreshToken {
         this.id = id;
     }
 
-    public String getToken() {
-        return token;
+    public String getTokenHash() {
+        return tokenHash;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setTokenHash(String tokenHash) {
+        this.tokenHash = tokenHash;
     }
 
-    public String getUsername() {
-        return username;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-    public String getPassword() {
-        return password;
+    public Instant getExpiresAt() {
+        return expiresAt;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Instant getExpiry() {
-        return expiry;
-    }
-
-    public void setExpiry(Instant expiry) {
-        this.expiry = expiry;
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
     }
 
     public boolean isRevoked() {
@@ -72,6 +74,30 @@ public class RefreshToken {
 
     public void setRevoked(boolean revoked) {
         this.revoked = revoked;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getRevokedAt() {
+        return revokedAt;
+    }
+
+    public void setRevokedAt(Instant revokedAt) {
+        this.revokedAt = revokedAt;
+    }
+
+    public String getReplacedByTokenHash() {
+        return replacedByTokenHash;
+    }
+
+    public void setReplacedByTokenHash(String replacedByTokenHash) {
+        this.replacedByTokenHash = replacedByTokenHash;
     }
     
 }
