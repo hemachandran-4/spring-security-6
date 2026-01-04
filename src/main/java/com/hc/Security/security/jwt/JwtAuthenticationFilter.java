@@ -36,9 +36,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private final BlackListDAO tokenBlacklistRepository;
 
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
-        "/auth/user/login",
-        "/auth/user/register",
-        "/auth/refresh"
+        "/user/login",
+        "/user/register",
+        "/refresh-token/rotate"
     );
 
     public JwtAuthenticationFilter(
