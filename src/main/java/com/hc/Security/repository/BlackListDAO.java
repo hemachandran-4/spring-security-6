@@ -11,7 +11,6 @@ public interface BlackListDAO extends JpaRepository<TokenBlacklist, String> {
 
     void deleteByTokenHash(String tokenHash);
 
-
     @Modifying
     @Query("""
         DELETE FROM TokenBlacklist t

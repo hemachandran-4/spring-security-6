@@ -1,5 +1,6 @@
 package com.hc.Security.controller;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,32 +39,12 @@ public class AuthController {
                 request.getPassword());
     }
 
-    @PostMapping("/user/register")
-    public String register(@RequestBody LoginRequest request) {
-        request.setLoginType((short) 0);
-        return authService.register(request);
-    }
-
-    @PostMapping("/admin/register")
-    public String registerAdmin(@RequestBody LoginRequest request) {
-        request.setLoginType((short) 1);
-        return authService.register(request);
-    } 
-
     @GetMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader(org.springframework.http.HttpHeaders.AUTHORIZATION) String authorizationHeader,
+    public ResponseEntity<String> logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
         @CookieValue(name = "refresh_token", required = false) String refreshToken
     ) {
         String response = authService.logout(authorizationHeader, refreshToken);
         return new ResponseEntity<String>(response,  null, 200);
     }
-
-    @PostMapping("/refresh")
-    public LoginResponse refresh(@RequestHeader("Authorization") String header
-) {
-
-        String refreshTokenValue = header.substring(7);
-
-        return authService.refreshToken(refreshTokenValue);
-    }
+    
 }
