@@ -50,7 +50,7 @@ public class RefreshTokenService {
         this.customUserDetailsService = customUserDetailsService;
     }
 
-    public String create(Long userId) {
+    public String create(Long userId, String fingerprint) {
 
         String rawToken = UUID.randomUUID().toString();
         String hashedToken = hash(rawToken);
@@ -58,6 +58,7 @@ public class RefreshTokenService {
         RefreshToken token = new RefreshToken();
         token.setUserId(userId);
         token.setTokenHash(hashedToken);
+        token.setFingerprintHash(hash(fingerprint));
         token.setExpiresAt(Instant.now().plusMillis(REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000));
         token.setRevoked(false);
         token.setCreatedAt(Instant.now());
@@ -67,7 +68,7 @@ public class RefreshTokenService {
         return rawToken;
     }
 
-    public RefreshToken validateRefreshToken(String rawToken) {
+    public RefreshToken validateRefreshToken(String rawToken, String fingerprint) {
         String hashedToken = hash(rawToken);
         RefreshToken token = refreshTokenDAO.findByTokenHashAndRevokedFalse(hashedToken);
         
@@ -79,13 +80,17 @@ public class RefreshTokenService {
             throw new RuntimeException("Refresh token expired");
         }
 
+        if (!token.getFingerprintHash().equals(hash(fingerprint))){
+            throw new RuntimeException("Fingerprint mismatch");
+        }
+
         return token;
     }
 
     @Transactional
-    public String rotateToken(String oldToken) {
+    public String rotateToken(String oldToken, String fingerprint) {
         // Revoke old token
-        RefreshToken oldRefreshToken = validateRefreshToken(oldToken);
+        RefreshToken oldRefreshToken = validateRefreshToken(oldToken, fingerprint);
         oldRefreshToken.setRevoked(true);
         oldRefreshToken.setRevokedAt(Instant.now());
         
@@ -138,9 +143,9 @@ public class RefreshTokenService {
                 (token + SECRET_SALT).getBytes(StandardCharsets.UTF_8));
     }
 
-    public LoginResponse refreshToken(String oldToken) {
+    public LoginResponse refreshToken(String oldToken, String fingerprint) {
 
-        String newRefreshToken = rotateToken(oldToken);
+        String newRefreshToken = rotateToken(oldToken, fingerprint);
 
         Long userId = getUserIdFromToken(newRefreshToken);
 

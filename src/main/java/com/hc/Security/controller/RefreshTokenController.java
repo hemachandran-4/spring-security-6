@@ -20,9 +20,10 @@ public class RefreshTokenController {
     }
     
     @PostMapping("/rotate")
-    public LoginResponse refresh(@RequestHeader(HttpHeaders.AUTHORIZATION) String header) {
+    public LoginResponse refresh(@RequestHeader(HttpHeaders.AUTHORIZATION) String header,
+            @RequestHeader("Fingerprint") String fingerprint) {
         String refreshTokenValue = header.substring(7);
-        return refreshTokenService.refreshToken(refreshTokenValue);
+        return refreshTokenService.refreshToken(refreshTokenValue, fingerprint);
     }
 
 }

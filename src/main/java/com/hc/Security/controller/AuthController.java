@@ -14,6 +14,9 @@ import com.hc.Security.dto.LoginRequest;
 import com.hc.Security.dto.LoginResponse;
 import com.hc.Security.service.AuthService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -26,25 +29,23 @@ public class AuthController {
     }
 
     @PostMapping("/user/login")
-    public LoginResponse userLogin(@RequestBody LoginRequest request) {
-        return authService.login(
-                request.getUsername(),
-                request.getPassword());
+    public LoginResponse userLogin(@RequestBody LoginRequest request,
+            HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        return authService.login(request, httpRequest, httpResponse);
     }
 
     @PostMapping("/admin/login")
-    public LoginResponse adminLogin(@RequestBody LoginRequest request) {
-        return authService.login(
-                request.getUsername(),
-                request.getPassword());
+    public LoginResponse adminLogin(@RequestBody LoginRequest request,
+            HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        return authService.login(request, httpRequest, httpResponse);
     }
 
     @GetMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-        @CookieValue(name = "refresh_token", required = false) String refreshToken
-    ) {
-        String response = authService.logout(authorizationHeader, refreshToken);
-        return new ResponseEntity<String>(response,  null, 200);
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
+            HttpServletResponse httpResponse) {
+        String response = authService.logout(authorizationHeader, refreshToken, httpResponse);
+        return new ResponseEntity<String>(response, null, 200);
     }
     
 }

@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private final BlackListDAO tokenBlacklistRepository;
 
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
-        "/user/login",
+        "/auth/user/login",
         "/user/register",
         "/refresh-token/rotate"
     );
@@ -68,9 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         logger.info("Requested URI: {}", request.getRequestURI());
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
-            logger.info("Extracted token hash: {}", hash(token));
             if (tokenBlacklistRepository.existsById(hash(token))) {
-                logger.info("Token is blacklisted: {}", token);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 throw new BadCredentialsException("Token is blacklisted");
             }

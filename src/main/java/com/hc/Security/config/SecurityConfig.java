@@ -39,7 +39,7 @@ public class SecurityConfig {
             .exceptionHandling(ex ->
                 ex.authenticationEntryPoint(entryPoint))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/user/login",
+                .requestMatchers("/auth/user/login",
                         "/refresh-token/rotate",
                         "/user/register"
                 ).permitAll()

@@ -21,6 +21,9 @@ public class RefreshToken {
     private String tokenHash;
 
     @Column(nullable = false)
+    private String fingerprintHash;
+
+    @Column(nullable = false)
     private Long userId;
 
     @Column(nullable = false)
@@ -50,6 +53,14 @@ public class RefreshToken {
 
     public void setTokenHash(String tokenHash) {
         this.tokenHash = tokenHash;
+    }
+
+    public String getFingerprintHash() {
+        return fingerprintHash;
+    }
+
+    public void setFingerprintHash(String fingerprintHash) {
+        this.fingerprintHash = fingerprintHash;
     }
 
     public Long getUserId() {
