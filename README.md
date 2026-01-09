@@ -8,68 +8,86 @@ This project demonstrates industry-standard authentication practices suitable fo
 
 ## ✨ Features
 
-- JWT-based stateless authentication
-- Access token + refresh token flow
-- Refresh token rotation
-- Refresh token reuse detection
-- Token revocation (logout support)
-- Blacklisted access tokens
-- Secure token hashing (no raw tokens stored)
-- MySQL persistence
-- Clean Spring Security 6 filter chain
-- Ready for Redis integration (optional)
+JWT-based stateless authentication
+
+- Short-lived access token and long-lived refresh token flow
+- Refresh token rotation on every refresh request
+- Refresh token reuse detection with automatic revocation
+- Token revocation with explicit logout support
+- Blacklisted access tokens (optional, configurable)
+- Secure token hashing (no raw access or refresh tokens stored)
+- Device fingerprint cookies for refresh token binding and replay protection
+- HttpOnly, Secure, SameSite-protected fingerprint cookies
+- MySQL persistence for users, refresh tokens, and blacklists
+- Clean Spring Security 6 filter chain implementation
 
 ---
 
 ## 🧠 Authentication Design Overview
-| Token         | Purpose                 | Lifetime            | Storage                  |
-| ------------- | ----------------------- | ------------------- | ------------------------ |
-| Access Token  | API authorization       | Short (e.g. 1 hour) | Client (Header)          |
-| Refresh Token | Issue new access tokens | Long (e.g. 7 days)  | Client (Cookie / Header) |
+| Token / Cookie     | Purpose                              | Lifetime               | Storage Location                  |
+| ------------------ | ------------------------------------ | ---------------------- | --------------------------------- |
+| **Access Token**   | API authorization                    | Short (e.g. 15–60 min) | Client (Authorization Header)     |
+| **Refresh Token**  | Issue new access tokens              | Long (e.g. 7–30 days)  | Client (HttpOnly Cookie / Header) |
+| **Fingerprint ID** | Bind session to device (anti-replay) | Long (matches refresh) | Client (HttpOnly Secure Cookie)   |
+
 
 ---
 
 ## 🔄 Authentication Flow
 
-### Login
+### 🔐 Login
 
 1. User submits username + password
-2. Credentials authenticated by AuthenticationManager
-3. Access token (JWT) issued
-4. Refresh token created and stored hashed in DB
-5. Tokens returned to client
+2. Credentials are authenticated by AuthenticationManager
+3. Access token (JWT) is issued
+4. Refresh token is generated, hashed, and stored in the database
+5. Device fingerprint is generated and stored (hashed) with the refresh token
+6. Fingerprint is returned to the client as a HttpOnly, Secure cookie
+7. Tokens are returned to the client
 
-### Access Protected API
+### 🔓 Access Protected API
 
-1. Client sends access token in Authorization header
-2. JWT filter validates token
-3. Security context is populated
-4. Request proceeds
+1. Client sends access token in the Authorization: Bearer header
+2. JWT authentication filter:
+   - Validates signature
+   - Validates expiration
+   - Extracts claims
+3. Spring Security context is populated
+4. Request proceeds to the controller
+  🔹 Fingerprint is not checked for normal API requests
 
-### Refresh Token
+### ♻️ Refresh Token
 
 1. Client sends refresh token
-2. Token is validated (exists, not revoked, not expired)
-3. Old refresh token is revoked
-4. New refresh token is issued (rotation)
-5. New access token is generated
+2. Browser automatically sends fingerprint cookie
+3. Server validates:
+   - Refresh token exists and is not revoked
+   - Refresh token is not expired
+   - Fingerprint matches stored hash
+4. Old refresh token is revoked (reuse detection)
+5. A new refresh token is issued (rotation)
+6. A new access token is generated
+7. Updated tokens are returned to the client
 
-### Logout
+### 🚪 Logout
 
-1. Access token is blacklisted
-2. Refresh token is revoked
-3. Token can no longer be reused
+1. Client sends refresh token
+2. Browser sends fingerprint cookie
+3. Server validates refresh token and fingerprint
+4. Refresh token is revoked
+5. Access token is optionally blacklisted
+6. Fingerprint cookie is deleted
+7. Session is fully terminated
 
 ---
 
-## 🔐 Security Highlights
+## 🛡️ Security Guarantees
 
-- ❌ No raw refresh tokens stored
-- ❌ No passwords stored in token tables
-- ✅ SHA-256 hashing with secret salt
-- ✅ Refresh token rotation prevents replay attacks
-- ✅ Blacklist prevents JWT reuse after logout
-- ✅ Stateless access token validation
+- Stateless access token validation
+- Refresh token rotation prevents replay attacks
+- Fingerprint binding prevents stolen refresh token reuse
+- Logout is deterministic (tokens cannot be reused)
+- No raw tokens stored in the database
 
 ---
 
