@@ -39,9 +39,15 @@ public class SecurityConfig {
             .exceptionHandling(ex ->
                 ex.authenticationEntryPoint(entryPoint))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/user/login",
-                        "/refresh-token/rotate",
-                        "/user/register"
+                        .requestMatchers("/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/favicon.ico",
+                                "/login",
+                                "/auth/**",
+                                "/auth/user/login",
+                                "/refresh-token/rotate",
+                                "/user/register"
                 ).permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

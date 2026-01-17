@@ -8,6 +8,15 @@ public class LoginRequest {
     
     private Short loginType;
 
+    public LoginRequest() {
+    }
+
+    public LoginRequest(String username, String password, Short loginType) {
+        this.username = username;
+        this.password = password;
+        this.loginType = loginType;
+    }
+
     public String getUsername() {
         return username;
     }

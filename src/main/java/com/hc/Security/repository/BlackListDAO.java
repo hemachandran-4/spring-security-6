@@ -17,5 +17,7 @@ public interface BlackListDAO extends JpaRepository<TokenBlacklist, String> {
         WHERE t.expiresAt < :now
     """)
     int deleteExpired(@Param("now") long now);
+
+    
     
 }

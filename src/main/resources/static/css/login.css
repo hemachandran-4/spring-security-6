@@ -1,0 +1,95 @@
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Roborto-mono, monospace;
+    line-height: 1.6;
+}
+
+.container {
+    margin: 0 auto;
+    border: 1px solid black;
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    /* padding-left: 5%;
+    padding-right: 5%;
+    padding-top: 1%;
+    padding-bottom: 1%; */
+    background-color: #101417;
+}
+
+.operation{
+    width: 50%;
+    height: 100%;
+}
+.response{
+    width: 50%;
+    height: 100%;
+    background-image: url('../images/image1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.login-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+.login-form{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    width: 60%;
+    height: 50%;
+    justify-content: space-around;
+    padding-left: 1%;
+}
+
+.header-font{
+    color: #c4c8ca;
+}
+
+.instruction{
+    color: #616467;
+    font-size: smaller;
+}
+
+.link {
+    color: #3a5ec7;
+    font-size: smaller;
+    cursor: pointer;
+}
+.input-container{
+    display: flex;
+    flex-direction: column;
+}
+.input-field{
+    background-color: transparent;
+    border: 1px solid #c4c8ca;
+    padding-left: 2%;
+    padding-top: 1%;
+    padding-bottom: 1%;
+    color: #616467;
+    font-family: Roboto-mono, monospace;
+}
+.input-label{
+    color: #616467;
+    padding-bottom: 1%;
+    font-size: smaller;
+}
+.submit-button{
+    padding-left: 5%;
+    padding-right: 5%;
+    padding-top: 1%;
+    padding-bottom: 1%;
+    color: #c4c8ca;
+    background-color: #3a5ec7;
+    border: 0;
+}

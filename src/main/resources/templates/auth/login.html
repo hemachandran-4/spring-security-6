@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="response"></div>
+        <div class="operation">
+            <div class="login-container">
+                <form class="login-form">
+                    <div>
+                        <h3 class="header-font">Welcome to Spring Security</h3>
+                        <p class="instruction">Don't have an account? <span class="link">Click here</span></p>
+                    </div>
+                    <div class="input-container">
+                        <label class="input-label" for="username">Email Address</label>
+                        <input id="username" type="text" class="input-field" placeholder="">
+                    </div>
+                    <div class="input-container">
+                        <label class="input-label" for="password">Password</label>
+                        <input id="password" type="password" class="input-field" placeholder="">
+                    </div>
+                    <div>
+                        <button onclick="login()" type="button" class="submit-button">Login</button>
+                        <p class="instruction">Forgot your password? <span class="link">Click here</span></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            fetch("/auth/user/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error();
+                    return res.json();
+                })
+                .then(data => {
+                    localStorage.setItem("accessToken", data.accessToken);
+                    localStorage.setItem("refreshToken", data.refreshToken);
+                    localStorage.setItem("tokenType", data.tokenType);
+                    localStorage.setItem("username", data.username);
+
+                    window.location.href = "/home";
+                })
+                .catch(() => {
+                    document.getElementById("error").innerText = "Invalid credentials";
+                });
+        }
+    </script>
+</body>
+
+</html>

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hc.Security.dto.LoginRequest;
@@ -16,6 +17,7 @@ import com.hc.Security.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 
 @RestController
@@ -30,8 +32,10 @@ public class AuthController {
 
     @PostMapping("/user/login")
     public LoginResponse userLogin(@RequestBody LoginRequest request,
-            HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        return authService.login(request, httpRequest, httpResponse);
+            HttpServletRequest httpRequest, HttpServletResponse httpResponse, HttpSession session) {
+        LoginResponse loginResponse = authService.login(request, httpRequest, httpResponse);
+        session.setAttribute("loginResponse", loginResponse);
+        return loginResponse;
     }
 
     @PostMapping("/admin/login")

@@ -21,6 +21,7 @@ import com.hc.Security.security.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -36,10 +37,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private final BlackListDAO tokenBlacklistRepository;
 
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
-        "/auth/user/login",
-        "/user/register",
-        "/refresh-token/rotate"
-    );
+            "/css/",
+            "/js/",
+            "/images/",
+            "/favicon.ico",
+            "/login",
+            "/auth/",
+            "/.well-known/", "/auth/user/login",
+            "/user/register",
+            "/refresh-token/rotate",
+            "/login"
+        );
 
     public JwtAuthenticationFilter(
             JwtTokenProvider tokenProvider,
@@ -64,11 +72,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
-        logger.info("Requested URI: {}", request.getRequestURI());
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        logger.info("JwtAuthenticationFilter invoked for request: " + request.getRequestURI());
+        String token = extractTokenFromCookie(request);
+        if(token == null){
+            String header = request.getHeader("Authorization");
+            if(header != null && header.startsWith("Bearer ")){
+                token = header.substring(7);
+            }
+        }
+        
+        if (token != null) {
             if (tokenBlacklistRepository.existsById(hash(token))) {
+
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 throw new BadCredentialsException("Token is blacklisted");
             }
@@ -91,6 +106,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private String hash(String token) {
         return DigestUtils.md5DigestAsHex(
                 (token + SECRET_SALT).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String extractTokenFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+
+        for (Cookie cookie : request.getCookies()) {
+            if ("ACCESS_TOKEN".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
     
 }

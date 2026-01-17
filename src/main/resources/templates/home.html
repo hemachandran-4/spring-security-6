@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Security 6</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="home-container">
+        <div id="navbar-container" class="bg-171616">
+            <div id="navbar-logo">
+
+            </div>
+            <div id="navbar-p1">
+                <div class="nav-opt">
+                    <div class="nav-opt-col">
+                        <div class="nav-col-div bg-green">
+
+                        </div>
+                    </div>
+                    <div class="nav-opt-lab">PRODUCT TOUR</div>
+                </div>
+                <div class="nav-opt">
+                    <div class="nav-opt-col">
+                        <div class="nav-col-div bg-blue">
+
+                        </div>
+                    </div>
+                    <div class="nav-opt-lab">BUY</div>
+                </div>
+                <div class="nav-opt">
+                    <div class="nav-opt-col">
+                        <div class="nav-col-div bg-plum">
+
+                        </div>
+                    </div>
+                    <div class="nav-opt-lab">RENEW</div>
+                </div>
+                <div class="nav-opt">
+                    <div class="nav-opt-col">
+                        <div class="nav-col-div bg-tomato">
+
+                        </div>
+                    </div>
+                    <div class="nav-opt-lab">UPGRADE</div>
+                </div>
+                <div class="nav-opt">
+                    <div class="nav-opt-col">
+                        <div class="nav-col-div bg-cadetblue">
+
+                        </div>
+                    </div>
+                    <div class="nav-opt-lab">OLD VERSION</div>
+                </div>
+            </div>
+            <div id="navbar-profile">
+                <div id="navbar-profile-icon">
+                        <i class="fa fa-user"></i>
+                        <span class="tooltip-text">Profile</span>
+                </div>
+                <div id="navbar-logout-icon">
+                        <i class="fa fa-sign-out-alt"></i>
+                        <span class="tooltip-text">Log out</span>
+                </div>
+            </div>
+        </div>
+        <div class="d2"></div>
+        <div class="d3"></div>
+        <div class="d4"></div>
+    </div>
+    <script>
+        const logoutBtn = document.getElementById('navbar-logout-icon');
+
+        logoutBtn.addEventListener('click', function () {
+
+            const accessToken = localStorage.getItem("accessToken");
+
+            fetch('/auth/logout', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken
+                },
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        localStorage.removeItem("accessToken");
+                        localStorage.removeItem("tokenType");
+                        localStorage.removeItem("refreshToken");
+                        localStorage.removeItem("username");
+
+                        window.location.href = '/login';
+                    } else {
+                        alert('Logout failed');
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Logout error');
+                });
+        });
+    </script>
+</body>
+</html>

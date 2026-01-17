@@ -53,6 +53,10 @@ public class AuthService {
             Authentication auth = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
             String token = tokenProvider.generateToken(auth);
+            httpResponse.addHeader(
+                    "Set-Cookie",
+                    "ACCESS_TOKEN=" + token +
+                            "; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=3600");
             String fingerprint = extractFingerprint(httpRequest);
             if (fingerprint == null) {
                 fingerprint = UUID.randomUUID().toString();
@@ -63,6 +67,12 @@ public class AuthService {
             }
             String refreshToken = refreshTokenService
                     .create(userDAO.findByUsername(request.getUsername()).get().getId(), fingerprint);
+            
+            httpResponse.addHeader(
+                    "Set-Cookie",
+                    "refresh_token=" + refreshToken +
+                            "; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800");
+
             return new LoginResponse(
                     token,
                     refreshToken,
